@@ -1,11 +1,14 @@
 import React from 'react';
 import { GraphNode, GraphLink } from '../types';
-import { User, Car, Briefcase, Package, Store, Box, Calendar, DollarSign, Link as LinkIcon, X } from 'lucide-react';
+import { User, Car, Briefcase, Package, Store, Box, Calendar, DollarSign, Link as LinkIcon, X, Trash2, Edit2 } from 'lucide-react';
 
 interface DetailPanelProps {
   selectedNode: GraphNode | null;
   selectedLink: GraphLink | null;
   onClose: () => void;
+  onDeleteNode: (nodeId: string) => void;
+  onDeleteLink: (linkId: string) => void;
+  onEditLink: (link: GraphLink) => void;
 }
 
 const getIcon = (type: string) => {
@@ -19,7 +22,7 @@ const getIcon = (type: string) => {
   }
 };
 
-export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedNode, selectedLink, onClose }) => {
+export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedNode, selectedLink, onClose, onDeleteNode, onDeleteLink, onEditLink }) => {
   if (!selectedNode && !selectedLink) return null;
 
   return (
@@ -28,9 +31,30 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ selectedNode, selected
         <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
           {selectedNode ? '实体详情' : '关系详情'}
         </h2>
-        <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors p-1 hover:bg-slate-200 rounded-md">
-          <X className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          {selectedLink && (
+            <button 
+              onClick={() => onEditLink(selectedLink)} 
+              className="text-emerald-500 hover:text-emerald-700 transition-colors p-1 hover:bg-emerald-50 rounded-md"
+              title="修改"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          )}
+          <button 
+            onClick={() => {
+              if (selectedNode) onDeleteNode(selectedNode.id);
+              if (selectedLink) onDeleteLink(selectedLink.id);
+            }} 
+            className="text-red-400 hover:text-red-600 transition-colors p-1 hover:bg-red-50 rounded-md"
+            title="删除"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors p-1 hover:bg-slate-200 rounded-md" title="关闭">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="p-6 flex-1 overflow-y-auto">

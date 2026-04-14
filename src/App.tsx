@@ -20,6 +20,7 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isAddingLinkMode, setIsAddingLinkMode] = useState(false);
+  const [editingLink, setEditingLink] = useState<GraphLink | null>(null);
   const [linkSourceNode, setLinkSourceNode] = useState<GraphNode | null>(null);
   const [linkTargetNode, setLinkTargetNode] = useState<GraphNode | null>(null);
   const [displayLevel, setDisplayLevel] = useState(1);
@@ -71,6 +72,56 @@ export default function App() {
     setIsAddingLinkMode(false);
     setLinkSourceNode(null);
     setLinkTargetNode(null);
+    setEditingLink(null);
+  };
+
+  const handleUpdateLink = (updatedLink: GraphLink) => {
+    setGraphData(prev => ({
+      ...prev,
+      links: prev.links.map(l => l.id === updatedLink.id ? updatedLink : l)
+    }));
+    
+    if (selectedLink?.id === updatedLink.id) {
+      setSelectedLink(updatedLink);
+    }
+    
+    setIsAddLinkModalOpen(false);
+    setEditingLink(null);
+    setLinkSourceNode(null);
+    setLinkTargetNode(null);
+  };
+
+  const handleEditLink = (link: GraphLink) => {
+    setEditingLink(link);
+    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+    
+    const source = graphData.nodes.find(n => n.id === sourceId) || null;
+    const target = graphData.nodes.find(n => n.id === targetId) || null;
+    
+    setLinkSourceNode(source);
+    setLinkTargetNode(target);
+    setIsAddLinkModalOpen(true);
+  };
+
+  const handleDeleteNode = (nodeId: string) => {
+    setGraphData(prev => ({
+      nodes: prev.nodes.filter(n => n.id !== nodeId),
+      links: prev.links.filter(l => {
+        const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+        const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+        return sourceId !== nodeId && targetId !== nodeId;
+      })
+    }));
+    setSelectedNode(null);
+  };
+
+  const handleDeleteLink = (linkId: string) => {
+    setGraphData(prev => ({
+      ...prev,
+      links: prev.links.filter(l => l.id !== linkId)
+    }));
+    setSelectedLink(null);
   };
 
   const toggleAddLinkMode = () => {
@@ -92,6 +143,7 @@ export default function App() {
     setIsAddingLinkMode(false);
     setLinkSourceNode(null);
     setLinkTargetNode(null);
+    setEditingLink(null);
   };
 
   // Filter graph data based on displayLevel
@@ -257,6 +309,9 @@ export default function App() {
             selectedNode={selectedNode}
             selectedLink={selectedLink}
             onClose={handleClosePanel}
+            onDeleteNode={handleDeleteNode}
+            onDeleteLink={handleDeleteLink}
+            onEditLink={handleEditLink}
           />
         </main>
       </div>
@@ -270,8 +325,10 @@ export default function App() {
         isOpen={isAddLinkModalOpen}
         onClose={handleCancelAddLink}
         onAdd={handleAddLink}
+        onUpdate={handleUpdateLink}
         sourceNode={linkSourceNode}
         targetNode={linkTargetNode}
+        editingLink={editingLink}
       />
     </div>
   );

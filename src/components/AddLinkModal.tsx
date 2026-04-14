@@ -5,15 +5,33 @@ interface AddLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (link: GraphLink) => void;
+  onUpdate?: (link: GraphLink) => void;
   sourceNode: GraphNode | null;
   targetNode: GraphNode | null;
+  editingLink?: GraphLink | null;
 }
 
-export const AddLinkModal: React.FC<AddLinkModalProps> = ({ isOpen, onClose, onAdd, sourceNode, targetNode }) => {
+export const AddLinkModal: React.FC<AddLinkModalProps> = ({ isOpen, onClose, onAdd, onUpdate, sourceNode, targetNode, editingLink }) => {
   const [type, setType] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
   const [directed, setDirected] = useState(true);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (editingLink) {
+        setType(editingLink.type || '');
+        setAmount(editingLink.amount ? String(editingLink.amount) : '');
+        setDate(editingLink.date || '');
+        setDirected(editingLink.directed !== false);
+      } else {
+        setType('');
+        setAmount('');
+        setDate('');
+        setDirected(true);
+      }
+    }
+  }, [isOpen, editingLink]);
 
   if (!isOpen || !sourceNode || !targetNode) return null;
 
@@ -22,7 +40,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({ isOpen, onClose, onA
     if (!type) return;
 
     const newLink: GraphLink = {
-      id: `L_${Date.now()}`,
+      id: editingLink ? editingLink.id : `L_${Date.now()}`,
       source: sourceNode.id,
       target: targetNode.id,
       type,
@@ -30,20 +48,22 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({ isOpen, onClose, onA
       ...(amount ? { amount: Number(amount) } : {}),
       ...(date ? { date } : {})
     };
-    onAdd(newLink);
     
-    // Reset form
-    setType('');
-    setAmount('');
-    setDate('');
-    setDirected(true);
+    if (editingLink && onUpdate) {
+      onUpdate(newLink);
+    } else {
+      onAdd(newLink);
+    }
+    
     onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl w-96 p-6 border-t-4 border-emerald-500">
-        <h2 className="text-xl font-bold text-slate-800 mb-4">新增关联关系</h2>
+        <h2 className="text-xl font-bold text-slate-800 mb-4">
+          {editingLink ? '修改关联关系' : '新增关联关系'}
+        </h2>
         
         <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 mb-4">
           <div className="text-center flex-1 overflow-hidden">
@@ -126,7 +146,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({ isOpen, onClose, onA
               type="submit" 
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-md shadow-emerald-500/20 font-medium"
             >
-              确认添加
+              {editingLink ? '保存修改' : '确认添加'}
             </button>
           </div>
         </form>

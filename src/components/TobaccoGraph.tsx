@@ -38,10 +38,12 @@ export const TobaccoGraph: React.FC<TobaccoGraphProps> = ({ data, centerNodeIds 
   }, []);
 
   useEffect(() => {
-    if (!svgRef.current || !data.nodes.length) return;
+    if (!svgRef.current) return;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove(); // Clear previous render
+
+    if (!data.nodes.length) return;
 
     const { width, height } = dimensions;
 
